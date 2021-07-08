@@ -1,0 +1,8 @@
+spring:
+  jackson:
+    serialization:
+      indent-output: true
+
+json-api:
+  java-file-path: F:\下载\AutoGenerateApi\src\main\java\com\clxin
+  default-filter: true
