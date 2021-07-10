@@ -11,15 +11,11 @@ import org.springframework.util.ObjectUtils;
 import javax.annotation.Resource;
 import java.io.File;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class DefaultDocProvider implements DocProvider, InitializingBean {
 
-    public final static String METHOD_COMMENT = "methodComment";
 
     @Resource
     private JsonApiProperties jsonApiProperties;
@@ -37,11 +33,22 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
     private static Map<String, String> classDocMap = new HashMap<>();
 
     /**
-     * Map<全类名, Map<注释名, 注释>>
-     * 如com.a类下有一个b方法，那么这个方法名就是com.a.b
+     * Map<全类名+方法名, 注释>
+     * 如com.a类下有一个b(String a)方法，那么这个方法名就是com.a.b(String)
      */
-    private final static Map<String, Map<String, String>> methodDocMap = new HashMap<>();
+    private final static Map<String, String> methodDocMap = new HashMap<>();
 
+    /**
+     * 保存入参注释
+     * Map<一个tag的唯一标识，类名+方法名+入参顺序,Map<注释,字段名>>
+     */
+    private final static Map<String, AbstractMap.SimpleEntry<String, String>> paramDocMap = new HashMap<>();
+
+    /**
+     * 保存returnTag信息
+     * Map<方法名,注释>
+     */
+    private final static Map<String, String> returnTagMap = new HashMap<>();
     /**
      * 参数key，这个参数是入参dto或者返回值vo的参数->注释
      */
@@ -77,24 +84,46 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
         String className = classDoc.qualifiedName();
         MethodDoc[] methods = classDoc.methods();
         for (MethodDoc methodDoc : methods) {
-            HashMap<String, String> methodCommentMap = new HashMap<>();
+            String methodKey = methodDocKey(className, methodDoc);
+            methodDocMap.put(methodKey, methodDoc.commentText());
+            initParamDocMap(methodDoc, methodKey);
+        }
+    }
 
-            methodCommentMap.put(METHOD_COMMENT, methodDoc.commentText());
-            //这里获取的是方法注释上的如@param这样的注释
-            Tag[] tags = methodDoc.tags();
-            for (Tag tag : tags) {
-                if (tag instanceof ParamTag) {
-                    String paramComment = ((ParamTag) tag).parameterComment();
-                    methodCommentMap.put(tag.name(), paramComment);
-                } else {
-                    methodCommentMap.put(tag.name(), tag.text());
+    private static void initParamDocMap(MethodDoc methodDoc, String methodKey) {
+        //这里获取的是方法注释上的如@param这样的注释
+        Tag[] tags = methodDoc.tags();
+        for (Tag tag : tags) {
+            if (tag instanceof ParamTag) {
+                ParamTag paramTag = (ParamTag) tag;
+                String paramComment = paramTag.parameterComment();
+                if (ObjectUtils.isEmpty(paramComment)) {
+                    paramComment = "没有注释";
                 }
-            }
-            if (!ObjectUtils.isEmpty(methodCommentMap)) {
-                String methodKey = methodDocKey(className, methodDoc);
-                methodDocMap.put(methodKey, methodCommentMap);
+                int i = determineIndex(methodDoc, paramTag.parameterName());
+                paramDocMap.put(methodKey + i, new AbstractMap.SimpleEntry<>(paramComment, paramTag.parameterName()));
+            } else {
+                returnTagMap.put(methodKey, tag.text());
             }
         }
+    }
+
+    /**
+     * 推断入参名在所在方法中的参数顺序
+     *
+     * @param methodDoc 入参所在方法
+     * @param filedName 入参名
+     * @return 顺序（索引，从0开始）
+     */
+    private static int determineIndex(MethodDoc methodDoc, String filedName) {
+        int i = 0;
+        for (Parameter parameter : methodDoc.parameters()) {
+            if (parameter.name().equals(filedName)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
     }
 
     private static void initFieldDocMap(ClassDoc classDoc) {
@@ -149,27 +178,20 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
     public String getMethodComment(Method method) {
         Assert.notNull(method, "获取注释的方法不能为null");
         String methodKey = methodKey(method);
-
-        Map<String, String> methodDoc = methodDocMap.get(methodKey);
-        if (ObjectUtils.isEmpty(methodDoc)) {
-            return "";
-        }
-        return methodDoc.get(METHOD_COMMENT);
+        return methodDocMap.get(methodKey);
     }
 
 
     /**
      * 获取tag注释
      *
-     * @param method  tag所在的方法
-     * @param tagName tag的名称
+     * @param method tag所在的方法
      * @return tag注释
      */
     @Override
-    public String getTagComment(Method method, String tagName) {
-        Assert.notNull(method, "获取tag注释的方法不能为null");
-        Assert.hasText(tagName, "tag名称不能为空");
-        return methodDocMap.get(methodKey(method)).get(tagName);
+    public AbstractMap.SimpleEntry<String, String> getParamComment(Method method, int index) {
+        Assert.notNull(method, "获取入参注释的方法不能为null");
+        return paramDocMap.get(methodKey(method) + index);
     }
 
     /**
@@ -205,12 +227,12 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
         List<String> list = new ArrayList<>();
         list.add("-doclet");
 
-        list.add(getClass().getName());
+        list.add(DefaultDocProvider.class.getName());
         list.add("-encoding");
         list.add("utf-8");
         list.add("-classpath");
 
-        String rootPath = this.getClass().getResource("/").getPath();
+        String rootPath = this.getClass().getResource("/static").getPath();
 
         list.add(rootPath);
 

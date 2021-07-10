@@ -2,9 +2,11 @@ package com.clxin.generator;
 
 import com.clxin.controller.ApiViewController;
 import com.clxin.filter.ApiBeanFilter;
+import com.clxin.filter.ParamFilterHandler;
 import com.clxin.model.ApiInfo;
 import com.clxin.provider.DocProvider;
 import lombok.AllArgsConstructor;
+import org.springframework.core.MethodParameter;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
@@ -26,6 +28,8 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
     private final DocProvider docProvider;
 
     private final List<ApiBeanFilter> apiBeanFilters;
+
+    private final ParamFilterHandler paramFilterHandler;
 
     @Override
     public void generate() {
@@ -79,7 +83,33 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
             String methodComment = docProvider.getMethodComment(handlerMethod.getMethod());
             apiInfo.setApiDes(methodComment);
 
+            //设置这个方法的入参信息
+            for (MethodParameter methodParameter : handlerMethod.getMethodParameters()) {
 
+                Class<?> parameterType = methodParameter.getParameterType();
+                //过滤掉一些类
+                if (!paramFilterHandler.accept(parameterType)) {
+                    continue;
+                }
+                AbstractMap.SimpleEntry<String, String> paramInfo = docProvider.getParamComment(methodParameter.getMethod(), methodParameter.getParameterIndex());
+                if (ObjectUtils.isEmpty(paramInfo)) {
+                    continue;
+                }
+                if (parameterType.isPrimitive()||parameterType == String.class || parameterType.isArray()||parameterType.isAssignableFrom(Map.class)) {
+                    apiInfo.getAccept().put(paramInfo.getKey(), paramInfo.getValue());
+                } else {
+                    Object o = null;
+                    try {
+                        o = parameterType.getConstructor().newInstance();
+                    } catch (Exception e) {
+                        //
+                    }
+                    apiInfo.getAccept().put(paramInfo.getKey(), o);
+                }
+            }
+
+
+            //同一个类会有多个方法，所以先获取
             List<ApiInfo> oldApiInfos = apiInfoMap.get(classComment);
             if (!ObjectUtils.isEmpty(oldApiInfos)) {
                 oldApiInfos.add(apiInfo);
@@ -90,8 +120,10 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
             }
         }
         apiViewController.setApiViewInfo(apiInfoMap);
-
     }
+
+
+
 
     private boolean exclude(Class<?> apiBeanClass) {
         for (ApiBeanFilter apiBeanFilter : apiBeanFilters) {

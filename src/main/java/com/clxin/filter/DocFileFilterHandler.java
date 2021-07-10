@@ -11,7 +11,6 @@ import java.util.List;
  * 用于在doc扫描类时
  * 可以继承DocFileFilter并重写accept的方式扩展filter
  */
-@Component
 @AllArgsConstructor
 public class DocFileFilterHandler implements FileFilter {
 

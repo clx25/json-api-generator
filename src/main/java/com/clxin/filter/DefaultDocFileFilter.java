@@ -5,7 +5,7 @@ import java.io.File;
 /**
  * 默认的doc扫描文件过滤器
  */
-public class DefaultDocFileFilter  implements DocFileFilter{
+public class DefaultDocFileFilter implements DocFileFilter {
 
     /**
      * 过滤出.java文件，Dto类和Vo类
@@ -19,7 +19,9 @@ public class DefaultDocFileFilter  implements DocFileFilter{
             return true;
         }
         String fileName = file.getName();
-
-        return fileName.contains(".java") || fileName.contains("Dto") || fileName.contains("Vo");
+        if (fileName.contains("DocProvider")) {
+            return false;
+        }
+        return fileName.contains(".java");
     }
 }

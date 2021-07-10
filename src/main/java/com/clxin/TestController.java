@@ -1,14 +1,13 @@
 package com.clxin;
 
 import lombok.Data;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
- * 这是一个测试controller
+ * 测试相关
  */
 @Data
 @RequestMapping("api")
@@ -23,21 +22,20 @@ public class TestController {
     private String t2;
 
     /**
-     * 这是一个测试方法，用来返回对象
+     * 修改用户信息
      *
-     * @param testDto 接收数据
+     * @param testDto 修改用户所需的信息
      * @return 返回数据
      */
-    @GetMapping("test")
-    public TestDto test(TestDto testDto, String s) {
-        testDto.setA("666");
-        testDto.setB("777");
+    @PutMapping("user")
+    public TestDto test(@RequestBody TestDto testDto) {
         return testDto;
     }
 
     /**
      * 测试String类型入参
-     * @param s
+     *
+     * @param s 用户id
      */
     @GetMapping("/")
     public void t2(String s) {
@@ -46,7 +44,8 @@ public class TestController {
 
     /**
      * 测试class类型入参
-     * @param s
+     *
+     * @param s 这是一个类
      */
     @GetMapping("/t3")
     public void t3(Class<?> s) {
@@ -55,20 +54,38 @@ public class TestController {
 
     /**
      * 测试map类型入参
-     * @param map
+     *
+     * @param map 这是一个map
      */
     @GetMapping("/t4")
-    public void t4(Map<String,String> map) {
+    public void t4(Map<String, String> map) {
 
     }
 
+    /**
+     * 一个参数
+     *
+     * @param i       数字
+     */
     @GetMapping("/t5")
-    public void t5(int i) {
-
+    public int t5(int i) {
+        return i;
     }
 
     @GetMapping("/t6")
     public void t6(String[] ss) {
 
+    }
+
+    /**
+     * 测试t7
+     *
+     * @param s  第一个数据
+     * @param s2 第二个数据
+     * @return 返回值
+     */
+    @GetMapping("/t7")
+    public String t7(String s, String s2) throws IndexOutOfBoundsException, IOException {
+        return "a";
     }
 }

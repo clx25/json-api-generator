@@ -1,14 +1,13 @@
 package com.clxin.provider;
 
 import java.lang.reflect.Method;
+import java.util.AbstractMap;
 
 /**
  * 获取注释
  */
 public interface DocProvider {
-    String SPRING_JAVA_FILEPATH = "api.javaFilePath";
-    String PARAM_TAG_NAME = "@param";
-    String RETURN_TAG_NAME = "@return";
+
 
     /**
      * 获取类的注释
@@ -27,10 +26,10 @@ public interface DocProvider {
     String getMethodComment(Method method);
 
     /**
-     * 获取tag注释，tag就是方法上的@param这类的注释
-     * @param method tag所在的方法
-     * @param tagName tag的名称
-     * @return tag的注释
+     * 获取入参注释
+     * @param method 入参所在的方法
+     * @param index 入参字段所在索引
+     * @return 注释
      */
-    String getTagComment(Method method,String tagName);
+    AbstractMap.SimpleEntry<String, String> getParamComment(Method method, int index);
 }

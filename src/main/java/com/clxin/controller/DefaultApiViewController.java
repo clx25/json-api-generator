@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,7 +24,7 @@ public class DefaultApiViewController implements ApiViewController<Map<String, L
     }
 
 
-    @RequestMapping("/get")
+    @GetMapping("/get")
     public String apiView(Model model) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -36,6 +36,6 @@ public class DefaultApiViewController implements ApiViewController<Map<String, L
         });
         String json = objectMapper.writeValueAsString(apiViewInfo);
         model.addAttribute("apiView", json);
-        return "index";
+        return "view";
     }
 }

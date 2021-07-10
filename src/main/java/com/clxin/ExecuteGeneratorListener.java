@@ -4,11 +4,10 @@ import com.clxin.generator.ApiJsonGenerator;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.stereotype.Component;
 
-@Component
+
 @AllArgsConstructor
-public class TestListener implements ApplicationListener<ContextRefreshedEvent> {
+public class ExecuteGeneratorListener implements ApplicationListener<ContextRefreshedEvent> {
 
     private final ApiJsonGenerator apiJsonGenerator;
 
