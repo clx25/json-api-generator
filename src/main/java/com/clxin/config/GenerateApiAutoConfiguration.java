@@ -1,16 +1,17 @@
 package com.clxin.config;
 
-import com.clxin.ExecuteGeneratorListener;
+import com.clxin.generator.DefaultResultGenerator;
+import com.clxin.listener.ExecuteGeneratorListener;
 import com.clxin.controller.ApiViewController;
 import com.clxin.controller.DefaultApiViewController;
 import com.clxin.filter.*;
 import com.clxin.generator.ApiJsonGenerator;
 import com.clxin.generator.DefaultApiJsonGenerator;
+import com.clxin.listener.InitCommentListener;
 import com.clxin.model.ApiInfo;
 import com.clxin.provider.DefaultDocProvider;
 import com.clxin.provider.DocProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,12 +32,13 @@ public class GenerateApiAutoConfiguration {
                                              RequestMappingHandlerMapping requestMappingHandlerMapping,
                                              DocProvider docProvider,
                                              List<ApiBeanFilter> apiBeanFilters,
-                                             ParamFilterHandler paramFilterHandler) {
+                                             ParamFilterHandler paramFilterHandler,
+                                             DefaultResultGenerator defaultResultGenerator) {
         return new DefaultApiJsonGenerator(apiViewController,
                 requestMappingHandlerMapping,
                 docProvider,
                 apiBeanFilters,
-                paramFilterHandler);
+                paramFilterHandler,defaultResultGenerator);
     }
 
     @Bean
@@ -75,8 +77,13 @@ public class GenerateApiAutoConfiguration {
     }
 
     @Bean
-    public ExecuteGeneratorListener executeGeneratorListener(ApiJsonGenerator apiJsonGenerator) {
-        return new ExecuteGeneratorListener(apiJsonGenerator);
+    public ExecuteGeneratorListener executeGeneratorListener() {
+        return new ExecuteGeneratorListener();
+    }
+
+    @Bean
+    public InitCommentListener initCommentListener(ApiJsonGenerator apiJsonGenerator) {
+        return new InitCommentListener(apiJsonGenerator);
     }
 
     @Bean

@@ -1,5 +1,8 @@
 package com.clxin.provider;
 
+import com.sun.javadoc.ClassDoc;
+import org.springframework.beans.factory.InitializingBean;
+
 import java.lang.reflect.Method;
 import java.util.AbstractMap;
 
@@ -18,6 +21,11 @@ public interface DocProvider {
     String getClassComment(Class<?> c);
 
     /**
+     * 初始化注释数据
+     */
+    void initCommentData();
+
+    /**
      * 获取方法的注释
      *
      * @param method 需要获取注释的目标方法对象
@@ -32,4 +40,7 @@ public interface DocProvider {
      * @return 注释
      */
     AbstractMap.SimpleEntry<String, String> getParamComment(Method method, int index);
+
+    ClassDoc getClassDoc(Class<?> clazz);
+
 }

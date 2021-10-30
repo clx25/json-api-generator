@@ -4,7 +4,7 @@ import com.clxin.config.JsonApiProperties;
 import com.clxin.filter.DocFileFilterHandler;
 import com.sun.javadoc.*;
 import com.sun.tools.javadoc.Main;
-import org.springframework.beans.factory.InitializingBean;
+import lombok.Data;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -14,8 +14,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 
-public class DefaultDocProvider implements DocProvider, InitializingBean {
-
+public class DefaultDocProvider implements DocProvider {
 
     @Resource
     private JsonApiProperties jsonApiProperties;
@@ -53,26 +52,38 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
      * 参数key，这个参数是入参dto或者返回值vo的参数->注释
      */
     private final static Map<String, String> fieldMap = new HashMap<>();
+    /**
+     * key是类的全类名，值是ClassDoc
+     */
+    private final static Map<String, ClassDoc> classMap = new HashMap<>();
 
     /**
-     * {@link #afterPropertiesSet}方法中会调用到此方法，并传入RootDoc
+     * {@link #initCommentData}方法中会调用到此方法，并传入RootDoc
      *
      * @param rootDoc 包含了指定的java文件的注释信息的对象
      * @return 不知道
      */
     public static boolean start(RootDoc rootDoc) {
+        resetData();
         ClassDoc[] classes = rootDoc.classes();
-
         classDocMap = new HashMap<>();
         for (ClassDoc classDoc : classes) {
+            classMap.put(classDoc.qualifiedName(), classDoc);
             String className = classDoc.qualifiedName();
             classDocMap.put(className, classDoc.commentText());
 
             initMethodDocMap(classDoc);
             initFieldDocMap(classDoc);
         }
-
         return true;
+    }
+
+    private static void resetData() {
+        classDocMap.clear();
+        methodDocMap.clear();
+        paramDocMap.clear();
+        returnTagMap.clear();
+        fieldMap.clear();
     }
 
     /**
@@ -194,6 +205,11 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
         return paramDocMap.get(methodKey(method) + index);
     }
 
+    @Override
+    public ClassDoc getClassDoc(Class<?> clazz) {
+        return classMap.get(clazz.getName());
+    }
+
     /**
      * 构建方法key,这里生成的key要与{@link #methodDocKey}中的相同
      *
@@ -223,7 +239,7 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
      * 初始化doc，这个方法会调用到{@link #start}
      */
     @Override
-    public void afterPropertiesSet() {
+    public void initCommentData() {
         List<String> list = new ArrayList<>();
         list.add("-doclet");
 
@@ -262,5 +278,9 @@ public class DefaultDocProvider implements DocProvider, InitializingBean {
                 paths.add(f.getAbsolutePath());
             }
         }
+    }
+
+    public static Map<String, ClassDoc> getClassMap() {
+        return classMap;
     }
 }

@@ -12,14 +12,21 @@
 3. 获取请求的path，过滤部分controller。
 4. 解析controller方法的@param注释，部分入参的过滤。
 5. 使用json展示，由于默认的json样式不好看，所以使用了thymeleaf，在网上找了个json-viewer的js优化样式。
+6. 返回类型解析(支持多泛型与嵌套泛型)
 
-目前的返回样式
+目前解析这样的一个方法的返回结果
+[![5zc02j.png](https://z3.ax1x.com/2021/10/30/5zc02j.png)](https://imgtu.com/i/5zc02j)
+[![5zcyq0.png](https://z3.ax1x.com/2021/10/30/5zcyq0.png)](https://imgtu.com/i/5zcyq0)
+[![5zc4z9.png](https://z3.ax1x.com/2021/10/30/5zc4z9.png)](https://imgtu.com/i/5zc4z9)
+[![5zcMPe.png](https://z3.ax1x.com/2021/10/30/5zcMPe.png)](https://imgtu.com/i/5zcMPe)
 
-   [![WpYsPO.png](https://z3.ax1x.com/2021/07/10/WpYsPO.png)](https://imgtu.com/i/WpYsPO)
 ### 未完成的功能
-1. 解析返回值注释，由于项目一般会返回一个泛型对象，里面包含状态信息，所以需要用户设置一个成功状态的模板。
-2. 根据有没有jakarta.validation这个包，判断是否开启jsr303注解解析，根据这些注解判断该值是不是必需。
-3. 多线程优化。
+1. 添加注解方式的返回类型。
+2. 添加返回数据字段描述。
+3. 根据有没有jakarta.validation这个包，判断是否开启jsr303注解解析，根据这些注解判断该值是不是必需。
 4. 添加注释数据的刷新功能。
+5. 优化接收参数类型。
+6. 优化解构。
 ### 其他
-1. 使用json来展示复杂信息好像有些麻烦，可能会该成普通页面。
+1. 使用json来展示复杂信息好像有些麻烦，可能会改成普通页面。
+2. 多线程优化。

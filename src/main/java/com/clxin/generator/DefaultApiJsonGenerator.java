@@ -31,32 +31,40 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
 
     private final ParamFilterHandler paramFilterHandler;
 
+    private final DefaultResultGenerator defaultResultGenerator;
+
+
     @Override
     public void generate() {
+        docProvider.initCommentData();
         //获取springmvc解析好的请求映射
         Map<RequestMappingInfo, HandlerMethod> handlerMethods =
                 requestMappingHandlerMapping.getHandlerMethods();
 
-        Map<String, List<ApiInfo>> apiInfoMap = new HashMap<>();
+        Map<String, List<ApiInfo>> apiInfoMap = new TreeMap<>();
 
         //遍历映射
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMethods.entrySet()) {
+
             ApiInfo apiInfo = new ApiInfo();
 
             HandlerMethod handlerMethod = entry.getValue();
 
             //请求的方法的类
             Class<?> beanType = handlerMethod.getBeanType();
-
+            //排除一些controller
+            if (exclude(beanType)) {
+                continue;
+            }
+            //获取返回对象解析值
+            Object returnInfo = defaultResultGenerator.getReturnInfo(handlerMethod);
+            apiInfo.setResult(returnInfo);
             //获取类注释
             String classComment = docProvider.getClassComment(beanType);
             if (ObjectUtils.isEmpty(classComment)) {
                 continue;
             }
-            //排除一些controller
-            if (exclude(beanType)) {
-                continue;
-            }
+
 
             RequestMappingInfo requestMappingInfo = entry.getKey();
 
@@ -95,7 +103,7 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
                 if (ObjectUtils.isEmpty(paramInfo)) {
                     continue;
                 }
-                if (parameterType.isPrimitive()||parameterType == String.class || parameterType.isArray()||parameterType.isAssignableFrom(Map.class)) {
+                if (parameterType.isPrimitive() || parameterType == String.class || parameterType.isArray() || parameterType.isAssignableFrom(Map.class)) {
                     apiInfo.getAccept().put(paramInfo.getKey(), paramInfo.getValue());
                 } else {
                     Object o = null;
@@ -121,8 +129,6 @@ public class DefaultApiJsonGenerator implements ApiJsonGenerator {
         }
         apiViewController.setApiViewInfo(apiInfoMap);
     }
-
-
 
 
     private boolean exclude(Class<?> apiBeanClass) {
